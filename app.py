@@ -28,7 +28,7 @@ LANG = "tur+eng"
 VALUE_COL_X = 140
 RIGHT_COL_LIMIT = 500   # sagdaki ikinci sutuna (orn. "Sikayet") tasmayi engeller
 ROW_TOLERANCE = 8
-SHEET_HEADERS = ["Gorev No", "Ad Soyad", "Telefon", "Açıklama", "Kaynak Dosya"]
+SHEET_HEADERS = ["Gorev No", "Ad Soyad", "Telefon", "Görev Tipi", "Şikayet Metni", "Kaynak Dosya"]
 LABEL_KEYWORDS = {"ad_soyad": ["talep eden", "sms"], "telefon": ["telefon"]}
 # -------------------------------------------------------
 
@@ -84,9 +84,9 @@ def ad_soyad_temizle(ham_deger):
     return re.sub(r"^[^\wÇĞİÖŞÜçğıöşü]+|[^\wÇĞİÖŞÜçğıöşü]+$", "", ham_deger).strip()
 
 
-def aciklama_metnini_olustur(satirlar):
-    """Gorev Tipi satiri ile Aciklama etiketi arasindaki paragrafi toplar,
-    basina da gorev tipini ekler."""
+def gorev_tipi_ve_sikayet_metnini_ayikla(satirlar):
+    """Gorev Tipi degerini ve Aciklama etiketinden once gelen paragrafi
+    AYRI AYRI dondurur: (gorev_tipi, sikayet_metni)."""
     idx_tipi, idx_aciklama = None, None
     for i, satir in enumerate(satirlar):
         etiket, _ = satirdan_etiket_deger_ayir(satir)
@@ -105,8 +105,7 @@ def aciklama_metnini_olustur(satirlar):
             parcalar.append(" ".join(t for _, t in items))
         sikayet_metni = " ".join(p for p in parcalar if p).strip()
 
-    parcalar_son = [p for p in [gorev_tipi_degeri, sikayet_metni] if p]
-    return " - ".join(parcalar_son)
+    return gorev_tipi_degeri, sikayet_metni
 
 
 def gorseli_isle(image, dosya_adi):
@@ -114,12 +113,13 @@ def gorseli_isle(image, dosya_adi):
     satirlar = satirlari_grupla(image)
     ad_soyad = ad_soyad_temizle(deger_bul(satirlar, LABEL_KEYWORDS["ad_soyad"]))
     telefon_ham = deger_bul(satirlar, LABEL_KEYWORDS["telefon"])
-    aciklama = aciklama_metnini_olustur(satirlar)
+    gorev_tipi, sikayet_metni = gorev_tipi_ve_sikayet_metnini_ayikla(satirlar)
     return {
         "Gorev No": gorev_no_bul(tum_metin),
         "Ad Soyad": ad_soyad,
         "Telefon": telefon_temizle(telefon_ham),
-        "Açıklama": aciklama,
+        "Görev Tipi": gorev_tipi,
+        "Şikayet Metni": sikayet_metni,
         "Kaynak Dosya": dosya_adi,
     }
 
@@ -130,7 +130,7 @@ def kayitlari_excele_donustur(kayitlar):
     ws.title = "Sikayetler"
     ws.append(SHEET_HEADERS)
     for kayit in kayitlar:
-        ws.append([kayit["Gorev No"], kayit["Ad Soyad"], kayit["Telefon"], kayit["Açıklama"], kayit["Kaynak Dosya"]])
+        ws.append([kayit["Gorev No"], kayit["Ad Soyad"], kayit["Telefon"], kayit["Görev Tipi"], kayit["Şikayet Metni"], kayit["Kaynak Dosya"]])
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
