@@ -92,7 +92,7 @@ def gorev_tipi_ve_sikayet_metnini_ayikla(satirlar):
         etiket, _ = satirdan_etiket_deger_ayir(satir)
         if idx_tipi is None and "tipi" in etiket:
             idx_tipi = i
-        if idx_tipi is not None and "iklama" in etiket:
+        if idx_tipi is not None and "klama" in etiket:
             idx_aciklama = i
             break
 
